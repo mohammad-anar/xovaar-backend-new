@@ -14,13 +14,33 @@ const app: Application = express();
 app.use(rateLimiter);
 
 // CORS configuration supporting cookie credentials
+const allowedOrigins = [
+  ...new Set([
+    config.frontend_url,
+    "https://xovaar.com",
+    "https://www.xovaar.com",
+    "http://localhost:3000",
+    "http://localhost:3002",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3002",
+    ...(config.cors_origins || []),
+  ]),
+];
+
 app.use(
   cors({
-    origin: [
-      config.frontend_url,
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
-    ],
+    origin: (origin, callback) => {
+      // allow requests with no origin (like mobile apps, curl, or server-to-server)
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        allowedOrigins.includes("*") ||
+        /^https:\/\/([a-z0-9-]+\.)*xovaar\.com$/.test(origin)
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-refresh-token"],

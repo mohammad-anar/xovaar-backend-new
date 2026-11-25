@@ -2,6 +2,7 @@ import { Server } from "http";
 import app from "./app";
 import config from "./config";
 import prisma from "./config/prisma";
+import { closeOrderQueue } from "./queues/order.queue";
 
 let server: Server;
 
@@ -43,8 +44,9 @@ async function bootstrap() {
   process.on("uncaughtException", unexpectedErrorHandler);
   process.on("unhandledRejection", unexpectedErrorHandler);
 
-  process.on("SIGTERM", () => {
+  process.on("SIGTERM", async () => {
     console.log("🛑 [XOVAAR] SIGTERM received. Shutting down gracefully...");
+    await closeOrderQueue();
     if (server) {
       server.close();
     }

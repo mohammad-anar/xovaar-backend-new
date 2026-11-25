@@ -5,6 +5,7 @@ import jwtHelpers from "../../helpers/jwtHelpers";
 import prisma from "../../config/prisma";
 import ApiError from "../../utils/ApiError";
 import { OrderStatus, InvoiceStatus } from "@prisma/client";
+import { initOrderQueue, enqueueOrder } from "../../queues/order.queue";
 
 export interface ICreateOrderPayload {
   userId?: string;
@@ -35,7 +36,7 @@ const getNextSequence = async (counterName: string): Promise<number> => {
   return counter.seq;
 };
 
-const createOrder = async (payload: ICreateOrderPayload) => {
+const processOrderCreationDirect = async (payload: ICreateOrderPayload) => {
   if (!payload.items || payload.items.length === 0) {
     throw new ApiError(400, "Cannot create order with no items");
   }
@@ -157,6 +158,14 @@ const createOrder = async (payload: ICreateOrderPayload) => {
     ...order,
     auth: guestAuthData,
   };
+};
+
+// Initialize BullMQ Queue Worker for atomic order & invoice creation
+initOrderQueue(processOrderCreationDirect);
+
+// Enqueue order creation through BullMQ on Redis (with automatic direct fallback)
+const createOrder = async (payload: ICreateOrderPayload) => {
+  return await enqueueOrder(payload, processOrderCreationDirect);
 };
 
 const getAllOrders = async (query?: {
