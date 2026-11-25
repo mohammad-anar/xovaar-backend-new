@@ -47,10 +47,10 @@ app.use(
   })
 );
 
-// Body parsers & cookies
+// Body parsers & cookies (increased limit to 110mb)
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "110mb" }));
+app.use(express.urlencoded({ extended: true, limit: "110mb" }));
 
 // Serve static uploads (avatars, product images)
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
