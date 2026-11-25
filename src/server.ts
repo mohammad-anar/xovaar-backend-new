@@ -3,15 +3,19 @@ import app from "./app";
 import config from "./config";
 import prisma from "./config/prisma";
 import { closeOrderQueue } from "./queues/order.queue";
+import { seedAdmin } from "./helpers/seedHelper";
 
 let server: Server;
 
 async function bootstrap() {
   try {
-    // Attempt database connection
+    // Attempt database connection & auto-seed
     try {
       await prisma.$connect();
       console.log("✅ [XOVAAR] Connected to MongoDB database successfully via Prisma");
+
+      // Auto seed admin on server start (skips if admin already exists)
+      await seedAdmin();
     } catch (dbErr) {
       console.warn("⚠️ [XOVAAR] MongoDB not reachable at DATABASE_URL. Please set your real MongoDB URI in backend/.env when ready.");
     }

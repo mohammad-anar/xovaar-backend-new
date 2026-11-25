@@ -1,4 +1,4 @@
-# Stage 1: Build TypeScript
+# Stage 1: Build TypeScript & Generate Prisma Client
 FROM node:20-alpine AS builder
 WORKDIR /app
 
@@ -22,7 +22,11 @@ ENV PORT=5002
 COPY package*.json ./
 COPY prisma ./prisma/
 
-RUN npm install --omit=dev --legacy-peer-deps && npx prisma generate
+RUN npm install --omit=dev --legacy-peer-deps
+
+# Copy generated Prisma client from builder
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 COPY --from=builder /app/dist ./dist
 
