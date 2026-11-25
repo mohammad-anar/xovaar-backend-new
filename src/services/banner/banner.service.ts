@@ -19,15 +19,15 @@ const createBanner = async (payload: {
   let ctaLink = payload.ctaLink;
 
   if (payload.productId) {
-    const product = await prisma.product.findUnique({
+    const product = await prisma.product?.findUnique({
       where: { id: payload.productId },
     });
     if (product) {
-      productTitle = product.title;
-      productPrice = product.price;
-      productImage = product.imageUrl;
+      productTitle = product?.title;
+      productPrice = product?.price;
+      productImage = product?.imageUrl;
       if (!ctaLink) {
-        ctaLink = `/product/${product.slug || product.id}`;
+        ctaLink = `/product/${product?.slug || product?.id}`;
       }
     }
   }
@@ -100,15 +100,15 @@ const updateBanner = async (
 
   if (payload.productId !== undefined) {
     if (payload.productId) {
-      const product = await prisma.product.findUnique({
+      const product = await prisma.product?.findUnique({
         where: { id: payload.productId },
       });
       if (product) {
-        updateData.productTitle = product.title;
-        updateData.productPrice = product.price;
-        updateData.productImage = product.imageUrl;
+        updateData.productTitle = product?.title;
+        updateData.productPrice = product?.price;
+        updateData.productImage = product?.imageUrl;
         if (!payload.ctaLink) {
-          updateData.ctaLink = `/product/${product.slug || product.id}`;
+          updateData.ctaLink = `/product/${product?.slug || product?.id}`;
         }
       }
     } else {

@@ -3,7 +3,7 @@ import ApiError from "../../utils/ApiError";
 
 const toggleWishlist = async (userId: string, productId: string) => {
   // Verify product exists
-  const product = await prisma.product.findUnique({ where: { id: productId } });
+  const product = await prisma.product?.findUnique({ where: { id: productId } });
   if (!product) {
     throw new ApiError(404, "Product not found");
   }
@@ -48,7 +48,7 @@ const getMyWishlist = async (userId: string) => {
 
   // Extract products
   return wishlistItems
-    .filter((item) => item.product && !item.product.isDeleted)
+    .filter((item) => item.product && !item.product?.isDeleted)
     .map((item) => item.product);
 };
 

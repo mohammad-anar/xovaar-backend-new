@@ -14,7 +14,7 @@ const getDashboardOverview = async () => {
         },
         select: { total: true },
       }),
-      prisma.product.count({
+      prisma.product?.count({
         where: {
           isDeleted: false,
           OR: [{ inStock: false }, { stockQuantity: { lt: 5 } }],
@@ -59,7 +59,7 @@ const getSalesAnalytics = async () => {
         },
       },
     }),
-    prisma.product.findMany({
+    prisma.product?.findMany({
       where: { isDeleted: false },
       select: { subCategory: true },
     }),

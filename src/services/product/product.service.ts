@@ -14,7 +14,7 @@ export interface IProductFilterOptions {
 
 const generateUniqueSlug = async (title: string, excludeId?: string): Promise<string> => {
   let slug = slugify(title, { lower: true, strict: true, trim: true });
-  const existing = await prisma.product.findFirst({
+  const existing = await prisma.product?.findFirst({
     where: {
       slug,
       ...(excludeId ? { NOT: { id: excludeId } } : {}),
@@ -53,7 +53,7 @@ const createProduct = async (payload: {
 
   const slug = await generateUniqueSlug(payload.title);
 
-  const product = await prisma.product.create({
+  const product = await prisma.product?.create({
     data: {
       title: payload.title,
       slug,
@@ -123,7 +123,7 @@ const getAllProducts = async (filters: IProductFilterOptions) => {
   const skip = (page - 1) * limit;
 
   const [products, total] = await Promise.all([
-    prisma.product.findMany({
+    prisma.product?.findMany({
       where,
       orderBy,
       skip,
@@ -132,7 +132,7 @@ const getAllProducts = async (filters: IProductFilterOptions) => {
         category: true,
       },
     }),
-    prisma.product.count({ where }),
+    prisma.product?.count({ where }),
   ]);
 
   return {
@@ -147,7 +147,7 @@ const getAllProducts = async (filters: IProductFilterOptions) => {
 };
 
 const getNewArrivals = async (limit: number = 8) => {
-  const products = await prisma.product.findMany({
+  const products = await prisma.product?.findMany({
     where: { isDeleted: false, inStock: true },
     orderBy: { createdAt: "desc" },
     take: limit,
@@ -160,20 +160,20 @@ const getNewArrivals = async (limit: number = 8) => {
 
 const getProductBySlugOrId = async (slugOrId: string) => {
   // Try by slug first
-  let product = await prisma.product.findUnique({
+  let product = await prisma.product?.findUnique({
     where: { slug: slugOrId },
     include: { category: true },
   });
 
   // If not found and is valid 24 hex char Mongo ObjectId, try by id
   if (!product && /^[0-9a-fA-F]{24}$/.test(slugOrId)) {
-    product = await prisma.product.findUnique({
+    product = await prisma.product?.findUnique({
       where: { id: slugOrId },
       include: { category: true },
     });
   }
 
-  if (!product || product.isDeleted) {
+  if (!product || product?.isDeleted) {
     throw new ApiError(404, "Product not found");
   }
 
@@ -199,7 +199,7 @@ const updateProduct = async (
     isDeleted?: boolean;
   }
 ) => {
-  const existing = await prisma.product.findUnique({ where: { id } });
+  const existing = await prisma.product?.findUnique({ where: { id } });
   if (!existing) {
     throw new ApiError(404, "Product not found");
   }
@@ -219,7 +219,7 @@ const updateProduct = async (
     }
   }
 
-  const updated = await prisma.product.update({
+  const updated = await prisma.product?.update({
     where: { id },
     data: updateData,
     include: { category: true },
@@ -229,13 +229,13 @@ const updateProduct = async (
 };
 
 const deleteProduct = async (id: string) => {
-  const existing = await prisma.product.findUnique({ where: { id } });
+  const existing = await prisma.product?.findUnique({ where: { id } });
   if (!existing) {
     throw new ApiError(404, "Product not found");
   }
 
   // Soft delete so historical orders maintain consistency
-  const deleted = await prisma.product.update({
+  const deleted = await prisma.product?.update({
     where: { id },
     data: { isDeleted: true },
   });
