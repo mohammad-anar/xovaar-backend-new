@@ -1,6 +1,6 @@
 import express from "express";
-import { ProductController } from "./product?.controller";
-import { ProductValidation } from "./product?.validation";
+import { ProductController } from "./product.controller";
+import { ProductValidation } from "./product.validation";
 import validateRequest from "../../middlewares/validateRequest";
 import { authGuard } from "../../middlewares/authGuard";
 import { uploadSingle } from "../../middlewares/multer";
