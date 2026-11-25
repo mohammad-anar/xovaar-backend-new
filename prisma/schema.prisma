@@ -20,20 +20,198 @@ enum UserRole {
   CUSTOMER
 }
 
+enum OrderStatus {
+  PENDING
+  HOLD
+  CONFIRMED
+  MANUAL
+  PROCESSING
+  SHIPPED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELED
+  RETURNED
+}
+
+enum CategoryStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum InvoiceStatus {
+  ISSUED
+  PAID
+  CANCELED
+}
+
+model Counter {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  name String @unique // "order_seq", "invoice_seq"
+  seq  Int    @default(0)
+
+  @@map("counters")
+}
+
 model User {
-  id           String     @id @default(auto()) @map("_id") @db.ObjectId
-  name         String
-  email        String?    @unique
-  phone        String?    @unique
-  password     String
-  profileImage String?
-  role         UserRole   @default(CUSTOMER)
-  status       UserStatus @default(ACTIVE)
-  isDeleted    Boolean    @default(false)
+  id                String      @id @default(auto()) @map("_id") @db.ObjectId
+  name              String
+  email             String?     @unique
+  phone             String?     @unique
+  password          String
+  isDefaultPassword Boolean     @default(true)
+  profileImage      String?
+  role         UserRole    @default(CUSTOMER)
+  status       UserStatus  @default(ACTIVE)
+  isDeleted    Boolean     @default(false)
   otp          String?
   otpExpiresAt DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  orders       Order[]
+  wishlists    Wishlist[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   @@map("users")
+}
+
+model Category {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  name           String         @unique
+  slug           String         @unique
+  parentCategory String         @default("Men")
+  status         CategoryStatus @default(ACTIVE)
+  products       Product[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@map("categories")
+}
+
+model Product {
+  id                String      @id @default(auto()) @map("_id") @db.ObjectId
+  title             String
+  slug              String      @unique
+  price             Float
+  originalPrice     Float?
+  imageUrl          String
+  images            String[]
+  categoryId        String      @db.ObjectId
+  category          Category    @relation(fields: [categoryId], references: [id])
+  subCategory       String      // "Drop-Shoulder T-Shirt", "Sweat Shirt", "Hoodie", etc.
+  inStock           Boolean     @default(true)
+  stockQuantity     Int         @default(0)
+  freeDelivery      Boolean     @default(false)
+  description       String?
+  sizes             String[]    @default(["S", "M", "L", "XL", "XXL"])
+  fabricComposition String?     // Clean HTML string from RichTextEditor
+  isDeleted         Boolean     @default(false)
+  wishlists         Wishlist[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@map("products")
+}
+
+model Order {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  orderNumber     String      @unique // e.g. "XV-0001"
+  userId          String?     @db.ObjectId
+  user            User?       @relation(fields: [userId], references: [id])
+  customerName    String
+  phoneNumber     String
+  deliveryAddress String
+  deliveryNote    String?
+  deliveryType    String      // "inside" | "outside"
+  deliveryFee     Float       @default(0)
+  subtotal        Float
+  total           Float
+  status          OrderStatus @default(PENDING)
+  paymentMethod   String      @default("COD")
+  isManual        Boolean     @default(false)
+  items           OrderItem[]
+  invoice         Invoice?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId   String   @db.ObjectId
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?  @db.ObjectId
+  title     String
+  price     Float
+  imageUrl  String?
+  size      String
+  quantity  Int
+  createdAt DateTime @default(now())
+
+  @@map("order_items")
+}
+
+model Invoice {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  invoiceNumber String        @unique // e.g. "INV-0001"
+  orderId       String        @unique @db.ObjectId
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  totalAmount   Float
+  status        InvoiceStatus @default(ISSUED)
+  issuedAt      DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("invoices")
+}
+
+model Wishlist {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String   @db.ObjectId
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@map("wishlists")
+}
+
+model Banner {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  title          String
+  titleHighlight String
+  subtitle       String
+  imageUrl       String
+  productId      String?  @db.ObjectId
+  productTitle   String?
+  productPrice   Float?
+  productImage   String?
+  ctaText        String?  @default("Shop Now")
+  ctaLink        String?
+  align          String   @default("left") // "left" | "right"
+  isActive       Boolean  @default(true)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("banners")
+}
+
+model Settings {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  storeName             String   @default("XOVAAR")
+  storeTagline          String   @default("Aura Streetwear & Minimalist Luxury")
+  supportEmail          String   @default("support@xovaar.com")
+  supportPhone          String   @default("+880 1700-000000")
+  currency              String   @default("BDT (৳)")
+  insideDhakaShipping   Float    @default(70)
+  outsideDhakaShipping  Float    @default(130)
+  freeShippingThreshold Float    @default(2500)
+  noticeTicker          String   @default("FREE SHIPPING ON ORDERS OVER ৳2,500 | CASH ON DELIVERY AVAILABLE NATIONWIDE")
+  adminName             String   @default("XOVAAR Admin")
+  adminEmail            String   @default("admin@xovaar.com")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("settings")
 }

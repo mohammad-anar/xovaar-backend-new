@@ -145,10 +145,30 @@ const getAllUsers = async (
       status: true,
       isDeleted: true,
       profileImage: true,
+      orders: {
+        select: {
+          total: true,
+        },
+      },
       createdAt: true,
       updatedAt: true,
     },
   });
+
+  const formattedUsers = result.map((user) => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    role: user.role,
+    status: user.status,
+    isDeleted: user.isDeleted,
+    profileImage: user.profileImage,
+    totalOrders: user.orders?.length || 0,
+    totalSpent: user.orders?.reduce((sum, o) => sum + o.total, 0) || 0,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  }));
 
   const total = await prisma.user.count({
     where: whereCondition,
@@ -160,7 +180,7 @@ const getAllUsers = async (
       limit,
       total,
     },
-    data: result,
+    data: formattedUsers,
   };
 };
 

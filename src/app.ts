@@ -5,9 +5,13 @@ import path from "path";
 import router from "./routes";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
 import notFoundHandler from "./middlewares/notFoundHandler";
+import rateLimiter from "./middlewares/rateLimiter";
 import config from "./config";
 
 const app: Application = express();
+
+// Global Sliding Window Rate Limiter
+app.use(rateLimiter);
 
 // CORS configuration supporting cookie credentials
 app.use(

@@ -5,6 +5,7 @@ import prisma from "../../config/prisma";
 import ApiError from "../../utils/ApiError";
 import jwtHelpers from "../../helpers/jwtHelpers";
 import { generateOtp, isOtpExpired } from "../../helpers/otpHelper";
+import EmailHelper from "../../helpers/emailHelper";
 import { User, UserRole } from "@prisma/client";
 
 interface ISignupPayload {
@@ -26,6 +27,7 @@ interface ILoginResponse {
     role: UserRole;
     status: string;
     profileImage: string | null;
+    isDefaultPassword: boolean;
   };
 }
 
@@ -104,6 +106,7 @@ const signup = async (payload: ISignupPayload): Promise<ILoginResponse> => {
       role: newUser.role,
       status: newUser.status,
       profileImage: newUser.profileImage,
+      isDefaultPassword: newUser.isDefaultPassword,
     },
   };
 };
@@ -182,6 +185,7 @@ const login = async (identifier: string, password: string): Promise<ILoginRespon
       role: user.role,
       status: user.status,
       profileImage: user.profileImage,
+      isDefaultPassword: user.isDefaultPassword,
     },
   };
 };
@@ -245,6 +249,11 @@ const changePassword = async (
     throw new ApiError(404, "User account not found");
   }
 
+  // Security Rule: If user has no email registered, they cannot update password via self-service until adding email
+  if (!user.email) {
+    throw new ApiError(400, "Please add your email address first to secure and change your password");
+  }
+
   const isMatched = await bcrypt.compare(oldPass, user.password);
   if (!isMatched) {
     throw new ApiError(400, "Current password does not match");
@@ -256,6 +265,7 @@ const changePassword = async (
     where: { id: userId },
     data: {
       password: hashedNewPassword,
+      isDefaultPassword: false,
     },
   });
 };
@@ -277,6 +287,11 @@ const sendOtp = async (identifier: string): Promise<{ otp: string; expiresAt: Da
     throw new ApiError(403, "This account is inactive, deleted, or restricted.");
   }
 
+  // Rule: If user has no email set, cannot do password recovery
+  if (!user.email) {
+    throw new ApiError(400, "Please contact with admin");
+  }
+
   const { otp, expiresAt } = generateOtp();
 
   await prisma.user.update({
@@ -287,13 +302,15 @@ const sendOtp = async (identifier: string): Promise<{ otp: string; expiresAt: Da
     },
   });
 
-  // Log in server console for local testing / production SMS/email gateway trigger
-  console.log(`[XOVAAR OTP] Generated OTP ${otp} for account: ${user.email || user.phone}`);
+  // Send branded OTP email
+  await EmailHelper.sendOtpEmail(user.email, otp);
+
+  console.log(`[XOVAAR OTP] Generated OTP ${otp} for account: ${user.email}`);
 
   return {
-    otp, // Returned so frontend dev/demo can easily verify or fill
+    otp,
     expiresAt,
-    emailOrPhone: user.email || user.phone || cleanId,
+    emailOrPhone: user.email,
   };
 };
 
@@ -352,6 +369,7 @@ const resetPassword = async (
     where: { id: user.id },
     data: {
       password: hashedPassword,
+      isDefaultPassword: false,
       otp: null,
       otpExpiresAt: null,
     },

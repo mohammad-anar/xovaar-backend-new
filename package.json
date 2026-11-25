@@ -9,7 +9,14 @@
     "start": "node dist/server.js",
     "postinstall": "prisma generate"
   },
-  "keywords": ["express", "typescript", "prisma", "mongodb", "zod", "jwt"],
+  "keywords": [
+    "express",
+    "typescript",
+    "prisma",
+    "mongodb",
+    "zod",
+    "jwt"
+  ],
   "author": "XOVAAR",
   "license": "ISC",
   "dependencies": {
@@ -20,8 +27,11 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "http-status": "^2.0.0",
+    "ioredis": "^6.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
+    "nodemailer": "^10.6.1",
+    "slugify": "^1.6.9",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -32,6 +42,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/multer": "^1.4.12",
     "@types/node": "^22.9.0",
+    "@types/nodemailer": "^8.0.2",
     "prisma": "^5.22.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.6.3"

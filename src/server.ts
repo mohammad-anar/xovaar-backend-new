@@ -7,9 +7,13 @@ let server: Server;
 
 async function bootstrap() {
   try {
-    // Verify database connection
-    await prisma.$connect();
-    console.log("✅ [XOVAAR] Connected to MongoDB database successfully via Prisma");
+    // Attempt database connection
+    try {
+      await prisma.$connect();
+      console.log("✅ [XOVAAR] Connected to MongoDB database successfully via Prisma");
+    } catch (dbErr) {
+      console.warn("⚠️ [XOVAAR] MongoDB not reachable at DATABASE_URL. Please set your real MongoDB URI in backend/.env when ready.");
+    }
 
     server = app.listen(config.port, () => {
       console.log(`🚀 [XOVAAR] Server is running on port: http://localhost:${config.port}`);

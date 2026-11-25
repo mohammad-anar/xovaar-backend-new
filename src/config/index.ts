@@ -15,4 +15,12 @@ export default {
     refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN || "30d",
   },
   frontend_url: process.env.FRONTEND_URL || "http://localhost:3000",
+  redis_url: process.env.REDIS_URL || "redis://localhost:6379",
+  smtp: {
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    port: Number(process.env.SMTP_PORT) || 587,
+    user: process.env.SMTP_USER || "ai.anarul4232@gmail.com",
+    pass: process.env.SMTP_PASS || "",
+    from: process.env.SMTP_FROM || '"XOVAAR Security" <ai.anarul4232@gmail.com>',
+  },
 };

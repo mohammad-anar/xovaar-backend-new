@@ -44,4 +44,7 @@ export const upload = multer({
   fileFilter,
 });
 
+export const uploadSingle = (fieldName: string) => upload.single(fieldName);
+export const uploadMultiple = (fieldName: string, maxCount: number = 5) => upload.array(fieldName, maxCount);
+
 export default upload;
